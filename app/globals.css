@@ -390,3 +390,7 @@ header{animation:headerIn .5s ease-out both}
 .compareModelName{display:flex;align-items:center;gap:8px;min-width:0}
 .compareModelName b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .imageCompareHead .compareModelName{min-width:0}
+.compareModelTitle{display:flex;align-items:center;gap:8px;min-width:0}
+.compareModelTitle>div{min-width:0}
+.compareModelTitle>b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imageCompareHead .compareModelTitle{flex:1}
