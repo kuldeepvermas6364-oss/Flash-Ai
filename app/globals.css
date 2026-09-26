@@ -279,3 +279,25 @@ header{animation:headerIn .5s ease-out both}
   .codeBlock pre{font-size:11px;padding:12px}
   .codePreview{height:360px}
 }
+
+/* Code mode — editor-style presentation */
+.codeMessage .codeResponse{width:min(100%,980px);margin:0 auto}
+.codeMessage .codeBlock{border:1px solid #263247;border-radius:18px;background:#080b10;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.codeMessage .codeBlockHead{min-height:44px;padding:8px 12px;background:linear-gradient(180deg,#111824,#0b1018);border-bottom:1px solid #202a3a}
+.codeMessage .codeBlockHead>span{font-size:11px;color:#dbe6f7}
+.codeMessage .codeBlockHead>div{gap:6px}
+.codeMessage .codeBlockHead button{height:30px;padding:0 9px;border-radius:8px;background:#121b29;border:1px solid #263247;color:#b8c5d8;font-size:10px}
+.codeMessage .codeBlockHead button:hover{background:#1a2638;color:#fff;border-color:#3b4b65}
+.codeMessage .codeBlock pre{margin:0;min-height:180px;max-height:620px;padding:18px 20px;background:#080b10;overflow:auto;white-space:pre;tab-size:2}
+.codeMessage .codeBlock code{font-family:"JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.72;color:#e6edf7}
+.codeMessage .codeText{padding:4px 2px 12px;color:#cbd6e5}
+.codeMessage .codePreview{min-height:420px;background:#fff}
+@media(max-width:760px){
+  .codeMessage .codeResponse{width:100%}
+  .codeMessage .codeBlock{border-radius:15px}
+  .codeMessage .codeBlockHead{padding:8px 9px}
+  .codeMessage .codeBlockHead>div{max-width:none}
+  .codeMessage .codeBlockHead button{height:28px;padding:0 7px}
+  .codeMessage .codeBlock pre{padding:15px 14px;min-height:160px}
+  .codeMessage .codeBlock code{font-size:11px;line-height:1.65}
+}
