@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onValue, ref, set, push, serverTimestamp } from "firebase/database";
+import { auth, db } from "../lib/firebase";
 import {
   Sparkles, Plus, MessageSquare, Search, Code2, Image, Paperclip,
-  Send, Settings, History, Menu, X, GitCompare, Copy, Download, Eye
+  Send, Settings, History, Menu, X, GitCompare, Copy, Download, Eye, LogOut
 } from "lucide-react";
 
 const modes = [
@@ -37,11 +40,31 @@ export default function Home() {
   const [imageViewer, setImageViewer] = useState(null);
   const [codePreview, setCodePreview] = useState(null);
   const [chatMotion, setChatMotion] = useState("smooth");
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [chatId, setChatId] = useState(null);
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser);
+      setAuthReady(true);
+      if (!nextUser) {
+        window.location.href = "/auth";
+        return;
+      }
+      const chatsRef = ref(db, "users/" + nextUser.uid + "/chats");
+      onValue(chatsRef, (snapshot) => {
+        const value = snapshot.val() || {};
+        const remoteHistory = Object.entries(value)
+          .map(([id, chat]) => ({ ...chat, id }))
+          .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")))
+          .slice(0, 30);
+        if (remoteHistory.length) setHistory(remoteHistory);
+      });
+    });
     try {
       const saved = JSON.parse(localStorage.getItem("flash-ai-history") || "[]");
-      if (Array.isArray(saved)) setHistory(saved);
+      if (Array.isArray(saved)) setHistory((current) => current.length ? current : saved);
       const savedMotion = localStorage.getItem("flash-ai-chat-motion");
       if (savedMotion) setChatMotion(savedMotion);
     } catch {}
@@ -69,31 +92,41 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!messages.length || loading) return;
-    const timer = setTimeout(() => {
+    if (!messages.length || loading || !user || !authReady) return;
+    const timer = setTimeout(async () => {
       const first = messages.find((m) => m.role === "user")?.content || "New conversation";
-      setHistory((current) => {
-        const existing = current[0];
-        const sameConversation = existing && existing.mode === mode && existing.messages?.length <= messages.length && existing.messages?.[0]?.content === messages[0]?.content;
-        const item = sameConversation
-          ? { ...existing, title: first.slice(0, 52), messages, mode, updatedAt: new Date().toISOString() }
-          : { id: Date.now(), title: first.slice(0, 52), messages, mode, updatedAt: new Date().toISOString() };
-        const next = sameConversation ? [item, ...current.slice(1)] : [item, ...current];
-        const trimmed = next.slice(0, 20);
-        localStorage.setItem("flash-ai-history", JSON.stringify(trimmed));
-        return trimmed;
-      });
-    }, 500);
+      const id = chatId || push(ref(db, "users/" + user.uid + "/chats")).key;
+      if (!id) return;
+      if (!chatId) setChatId(id);
+      const chat = {
+        title: first.slice(0, 52),
+        messages,
+        mode,
+        updatedAt: new Date().toISOString(),
+        serverUpdatedAt: serverTimestamp()
+      };
+      try {
+        await set(ref(db, "users/" + user.uid + "/chats/" + id), chat);
+        setHistory((current) => {
+          const item = { ...chat, id };
+          const without = current.filter((entry) => entry.id !== id);
+          return [item, ...without].slice(0, 30);
+        });
+      } catch {}
+      try { localStorage.setItem("flash-ai-history", JSON.stringify([chat, ...history.filter((entry) => entry.id !== id)].slice(0, 20))); } catch {}
+    }, 700);
     return () => clearTimeout(timer);
-  }, [messages, loading, mode]);
+  }, [messages, loading, mode, user, authReady, chatId]);
 
   const loadConversation = (item) => {
     setMessages(item.messages || []);
     setMode(item.mode || "chat");
+    setChatId(item.id || null);
     setMobileOpen(false);
   };
 
   const startMode = (nextMode) => {
+    setChatId(null);
     setMode(nextMode);
     setMobileOpen(false);
     const prompts = {
