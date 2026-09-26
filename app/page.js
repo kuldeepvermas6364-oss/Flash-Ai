@@ -45,7 +45,8 @@ export default function Home() {
   const [imageModels, setImageModels] = useState([]);
   const [textModel, setTextModel] = useState("openai");
   const [imageModel, setImageModel] = useState("flux");
-  const [compareModels, setCompareModels] = useState([]);\n  const [compareCategory, setCompareCategory] = useState("all");
+  const [compareModels, setCompareModels] = useState([]);
+  const [compareCategory, setCompareCategory] = useState("all");
   const [compareResults, setCompareResults] = useState([]);
   const [imageCompare, setImageCompare] = useState(false);
   const [imageCompareModels, setImageCompareModels] = useState([]);
