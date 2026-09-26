@@ -28,7 +28,7 @@ function normalizeImage(data, model) {
   // Some compatible providers may return the image under image/data fields.
   if (typeof item.image === "string") {
     if (item.image.startsWith("data:image/")) return { dataUrl: item.image };
-    if (/^https?:\\/\\//i.test(item.image)) return { url: item.image };
+    if (/^https?:\/\//i.test(item.image)) return { url: item.image };
   }
 
   return null;
