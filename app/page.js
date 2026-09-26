@@ -191,7 +191,14 @@ export default function Home() {
             <div className="messages">
               {messages.map((message, index) => (
                 <div key={index} className={`msg ${message.role}`}>
-                  <div>{message.content}</div>
+                  <div className="bubble">
+                    <div>{message.content}</div>
+                    {message.role === "assistant" && message.content && (
+                      <button className="copy" onClick={() => copyMessage(message.content, index)}>
+                        {copied === index ? "Copied" : "Copy"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
               {loading && <div className="msg assistant"><div className="typing">Generating<span>.</span><span>.</span><span>.</span></div></div>}
