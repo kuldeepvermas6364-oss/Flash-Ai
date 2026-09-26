@@ -5,8 +5,9 @@ export const runtime = "nodejs";
 export async function GET() {
   return NextResponse.json({
     ok: true,
-    configured: Boolean(process.env.OPENROUTER_API_KEY),
-    model: process.env.OPENROUTER_MODEL || "openrouter/free"
+    configured: Boolean(process.env.POLLINATIONS_API_KEY || process.env.OPENROUTER_API_KEY),
+    provider: process.env.POLLINATIONS_API_KEY ? "pollinations" : (process.env.OPENROUTER_API_KEY ? "openrouter" : null),
+    model: process.env.POLLINATIONS_API_KEY ? (process.env.POLLINATIONS_TEXT_MODEL || "openai") : (process.env.OPENROUTER_MODEL || "openrouter/free")
   });
 }
 
@@ -19,23 +20,25 @@ export async function POST(request) {
       return NextResponse.json({ error: "Messages are required." }, { status: 400 });
     }
 
-    const key = process.env.OPENROUTER_API_KEY;
-    const model = process.env.OPENROUTER_MODEL || "openrouter/free";
+    const pollinationsKey = process.env.POLLINATIONS_API_KEY;
+    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    const usePollinations = Boolean(pollinationsKey);
+    const key = usePollinations ? pollinationsKey : openRouterKey;
+    const model = usePollinations ? (process.env.POLLINATIONS_TEXT_MODEL || "openai") : (process.env.OPENROUTER_MODEL || "openrouter/free");
 
     if (!key) {
       return NextResponse.json(
-        { error: "AI service is not configured. Add OPENROUTER_API_KEY in Vercel." },
+        { error: "AI service is not configured. Add POLLINATIONS_API_KEY or OPENROUTER_API_KEY in Vercel." },
         { status: 503 }
       );
     }
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(usePollinations ? "https://gen.pollinations.ai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": process.env.APP_URL || "https://vercel.app",
-        "X-Title": "Flash AI"
+        ...(usePollinations ? {} : { "HTTP-Referer": process.env.APP_URL || "https://vercel.app", "X-Title": "Flash AI" })
       },
       body: JSON.stringify({
         model,
