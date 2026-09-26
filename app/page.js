@@ -322,7 +322,11 @@ export default function Home() {
           <div className="modebar">
             <span>{active.label}</span>
             <small>{active.hint}</small>
-            {mode === "image" ? (
+            {mode === "compare" ? (
+              <button className="compareConfig" onClick={() => setSettingsOpen(true)}>
+                {compareModels.length}/5 models selected · Configure
+              </button>
+            ) : mode === "image" ? (
               <select value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Image model">
                 {imageModels.map((m) => {
                   const id = m?.id || m;
@@ -368,6 +372,9 @@ export default function Home() {
               <label>Image model<select value={imageModel} onChange={(e) => setImageModel(e.target.value)}>
                 {imageModels.map((m) => { const id = m?.id || m; return <option key={id} value={id}>{m?.name || id}</option>; })}
               </select></label>
+              <label>Compare models (up to 5)<select multiple size={Math.min(7, Math.max(4, textModels.length))} value={compareModels} onChange={(e) => setCompareModels(Array.from(e.target.selectedOptions).map((o) => o.value).slice(0, 5))}>
+                {textModels.map((m) => { const id = m?.id || m; return <option key={id} value={id}>{m?.name || id}</option>; })}
+              </select><small className="modalNote">Select up to 5 models. Every selected model receives the same task simultaneously.</small></label>
               <div className="service"><span className="status" /> {serviceStatus}</div>
             </div>
           </div>
