@@ -35,15 +35,18 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!messages.length) return;
-    const first = messages.find((m) => m.role === "user")?.content || "New conversation";
-    const item = { id: Date.now(), title: first.slice(0, 52), messages, mode, updatedAt: new Date().toISOString() };
-    setHistory((current) => {
-      const next = [item, ...current.filter((h) => h.messages !== messages)];
-      localStorage.setItem("flash-ai-history", JSON.stringify(next.slice(0, 20)));
-      return next.slice(0, 20);
-    });
-  }, [messages.length]);
+    if (!messages.length || loading) return;
+    const timer = setTimeout(() => {
+      const first = messages.find((m) => m.role === "user")?.content || "New conversation";
+      const item = { id: Date.now(), title: first.slice(0, 52), messages, mode, updatedAt: new Date().toISOString() };
+      setHistory((current) => {
+        const next = [item, ...current].slice(0, 20);
+        localStorage.setItem("flash-ai-history", JSON.stringify(next));
+        return next;
+      });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [messages, loading, mode]);
 
   const loadConversation = (item) => {
     setMessages(item.messages || []);
