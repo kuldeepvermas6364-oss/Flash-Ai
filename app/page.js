@@ -19,6 +19,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState("chat");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [copied, setCopied] = useState(null);
 
   const startMode = (nextMode) => {
     setMode(nextMode);
@@ -44,7 +45,7 @@ export default function Home() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next })
+        body: JSON.stringify({ messages: next, mode })
       });
 
       if (!response.ok) {
@@ -111,6 +112,14 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyMessage = async (content, index) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(index);
+      setTimeout(() => setCopied(null), 1400);
+    } catch {}
   };
 
   const active = modes.find((item) => item.id === mode) || modes[0];
