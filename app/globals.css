@@ -51,3 +51,27 @@ header{animation:headerIn .5s ease-out both}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
+
+/* Multi-model comparison workspace */
+.compareConfig{margin-left:auto;max-width:230px;padding:7px 10px;border:1px solid #ffffff14;border-radius:8px;background:#101c31;color:#c8d5e8;font-size:11px;text-align:left;transition:.2s ease}
+.compareConfig:hover{border-color:#ffffff2b;background:#15233c}
+.compareGrid{width:100%;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:14px}
+.compareCard{min-width:0;padding:13px;border:1px solid #ffffff12;border-radius:14px;background:linear-gradient(180deg,#ffffff08,#ffffff04);box-shadow:0 12px 35px #0003;animation:messageIn .35s cubic-bezier(.22,1,.36,1) both}
+.compareHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:10px;border-bottom:1px solid #ffffff0b}
+.compareHead b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:650;color:#e7eef9}
+.compareHead small{display:block;margin-top:3px;color:#728097;font-size:9px}
+.compareDot{width:7px;height:7px;flex:none;border-radius:50%;background:#46e39a;box-shadow:0 0 9px #46e39a}
+.compareDot.running{animation:statusPulse 1s infinite}
+.compareBody{min-height:100px;padding-top:11px;color:#c7d2e2;font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.compareError{border-color:#ff8a8a22}
+.compareError .compareDot{background:#ff8a8a;box-shadow:0 0 9px #ff8a8a}
+.settingsModal label select[multiple]{min-height:120px}
+.settingsModal label select[multiple] option{padding:6px 8px}
+@media(max-width:1100px){.compareGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){
+  .compareGrid{grid-template-columns:1fr;gap:9px}
+  .compareCard{padding:12px}
+  .compareBody{min-height:70px;font-size:13px}
+  .compareConfig{width:min(210px,50vw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .msg div{font-size:14px}
+}
