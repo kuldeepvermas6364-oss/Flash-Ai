@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   Sparkles, Plus, MessageSquare, Search, Code2, Image, Paperclip,
-  Send, Settings, History, Menu, X, GitCompare2
+  Send, Settings, History, Menu, X, GitCompare
 } from "lucide-react";
 
 const modes = [
