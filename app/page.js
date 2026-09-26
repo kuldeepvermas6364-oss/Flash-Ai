@@ -49,7 +49,11 @@ export default function Home() {
       else if (tm[0]) setTextModel(tm[0]?.id || tm[0]);
       if (im.some((m) => (m?.id || m) === "flux")) setImageModel("flux");
       else if (im[0]) setImageModel(im[0]?.id || im[0]);
-      setCompareModels(tm.slice(0, 5).map((m) => m?.id || m).filter(Boolean));
+      setCompareModels(
+        tm.map((m) => m?.id || m)
+          .filter((id) => id && !/^typesafe\//i.test(id))
+          .slice(0, 5)
+      );
       setServiceStatus(data?.configured ? `Connected · ${data.model}` : "API key not configured");
     }).catch(() => setServiceStatus("Unavailable"));
   }, []);
@@ -378,7 +382,7 @@ export default function Home() {
                   <b>{compareModels.length}/5</b>
                 </div>
                 <div className="modelPicker">
-                  {textModels.map((m) => {
+                  {textModels.filter((m) => !/^typesafe\//i.test(m?.id || m)).map((m) => {
                     const id = m?.id || m;
                     const label = m?.name || id;
                     const selected = compareModels.includes(id);
