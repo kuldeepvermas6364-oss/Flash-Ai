@@ -349,6 +349,13 @@ header{animation:headerIn .5s ease-out both}
 @media(max-width:760px){.authCard{padding:24px}.accountChip{max-width:145px}.accountChip span{max-width:100px}}
 
 
+.modelPickerCount{display:flex;align-items:center;gap:8px}
+.modelClear{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:inherit;border-radius:999px;padding:5px 9px;font-size:11px;cursor:pointer}
+.modelClear:hover{background:rgba(255,255,255,.11)}
+.selectedModelChips{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 10px}
+.selectedModelChip{display:inline-flex;align-items:center;gap:6px;max-width:100%;border:1px solid rgba(120,120,255,.32);background:rgba(120,120,255,.1);color:inherit;border-radius:999px;padding:6px 9px;font-size:11px;cursor:pointer}
+.selectedModelChip span{opacity:.7;font-size:14px;line-height:1}
+.selectedModelChip:hover{background:rgba(120,120,255,.17)}
 .modelCategoryTabs {
   display: flex;
   gap: 8px;
