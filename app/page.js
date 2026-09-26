@@ -360,9 +360,9 @@ export default function Home() {
           <small>Flash AI can make mistakes. Verify important information.</small>
         </div>
         {settingsOpen && (
-          <div className="settingsOverlay" onClick={() => setSettingsOpen(false)}>
-            <div className="settingsPanel" onClick={(e) => e.stopPropagation()}>
-              <div className="settingsHeader">
+          <div className="modalBackdrop" onClick={() => setSettingsOpen(false)}>
+            <div className="settingsModal" onClick={(e) => e.stopPropagation()}>
+              <div className="modalHead">
                 <div><b>Flash AI Settings</b><small>Provider and workspace controls</small></div>
                 <button className="icon" onClick={() => setSettingsOpen(false)}><X size={18} /></button>
               </div>
@@ -372,9 +372,41 @@ export default function Home() {
               <label>Image model<select value={imageModel} onChange={(e) => setImageModel(e.target.value)}>
                 {imageModels.map((m) => { const id = m?.id || m; return <option key={id} value={id}>{m?.name || id}</option>; })}
               </select></label>
-              <label>Compare models (up to 5)<select multiple size={Math.min(7, Math.max(4, textModels.length))} value={compareModels} onChange={(e) => setCompareModels(Array.from(e.target.selectedOptions).map((o) => o.value).slice(0, 5))}>
-                {textModels.map((m) => { const id = m?.id || m; return <option key={id} value={id}>{m?.name || id}</option>; })}
-              </select><small className="modalNote">Select up to 5 models. Every selected model receives the same task simultaneously.</small></label>
+              <div className="modelPickerSection">
+                <div className="modelPickerTitle">
+                  <span>Compare models</span>
+                  <b>{compareModels.length}/5</b>
+                </div>
+                <div className="modelPicker">
+                  {textModels.map((m) => {
+                    const id = m?.id || m;
+                    const label = m?.name || id;
+                    const selected = compareModels.includes(id);
+                    return (
+                      <button
+                        type="button"
+                        key={id}
+                        className={`modelOption ${selected ? "selected" : ""}`}
+                        onClick={() => {
+                          setCompareModels((current) => {
+                            if (current.includes(id)) return current.filter((item) => item !== id);
+                            if (current.length >= 5) return current;
+                            return [...current, id];
+                          });
+                        }}
+                      >
+                        <span className="modelCheck">{selected ? "✓" : ""}</span>
+                        <span className="modelInfo">
+                          <b>{label}</b>
+                          <small>{id}</small>
+                        </span>
+                        {selected && <span className="modelSelected">Selected</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <small className="modalNote">Choose up to 5 models. The same task is sent to every selected model.</small>
+              </div>
               <div className="service"><span className="status" /> {serviceStatus}</div>
             </div>
           </div>
