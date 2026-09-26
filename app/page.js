@@ -9,6 +9,41 @@ import {
   Send, Settings, History, Menu, X, GitCompare, Copy, Download, Eye, LogOut
 } from "lucide-react";
 
+const MODEL_BRANDS = [
+  { match: /openai|gpt|o[1-9]|chatgpt/i, icon: "openai", label: "OpenAI" },
+  { match: /claude|anthropic/i, icon: "anthropic", label: "Anthropic" },
+  { match: /gemini|google/i, icon: "google", label: "Google" },
+  { match: /qwen|alibaba/i, icon: "qwen", label: "Qwen" },
+  { match: /mistral|mixtral|codestral/i, icon: "mistral", label: "Mistral" },
+  { match: /llama|meta/i, icon: "meta", label: "Meta" },
+  { match: /deepseek/i, icon: "deepseek", label: "DeepSeek" },
+  { match: /grok|xai/i, icon: "xai", label: "xAI" },
+  { match: /command|cohere/i, icon: "cohere", label: "Cohere" },
+  { match: /phi|microsoft/i, icon: "microsoft", label: "Microsoft" },
+  { match: /kimi|moonshot/i, icon: "moonshot", label: "Moonshot" },
+  { match: /glm|zhipu/i, icon: "zhipu", label: "Zhipu" },
+  { match: /minimax/i, icon: "minimax", label: "MiniMax" },
+  { match: /perplexity|sonar/i, icon: "perplexity", label: "Perplexity" }
+];
+
+function getModelBrand(model) {
+  const id = String(model?.id || model || "");
+  const source = `${id} ${String(model?.name || "")} ${String(model?.provider || "")} ${String(model?.owned_by || "")}`;
+  return MODEL_BRANDS.find((brand) => brand.match.test(source)) || { icon: "ai", label: "AI" };
+}
+
+function ModelIcon({ model, size = 28 }) {
+  const brand = getModelBrand(model);
+  const safeSize = Math.max(20, Math.min(40, Number(size) || 28));
+  const src = `https://cdn.simpleicons.org/${brand.icon}`;
+  return (
+    <span className="modelBrandIcon" style={{ width: safeSize, height: safeSize }} title={brand.label} aria-label={brand.label}>
+      <img src={src} alt="" onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.nextElementSibling.style.display = "grid"; }} />
+      <span className="modelBrandFallback">{brand.label.slice(0, 1)}</span>
+    </span>
+  );
+}
+
 const MODEL_CATEGORIES = [
   { id: "reasoning", label: "Reasoning", match: /reason|thinking|r1|o1|o3/i },
   { id: "coding", label: "Coding", match: /code|coder|codestral|starcoder/i },
@@ -297,8 +332,7 @@ export default function Home() {
                   (data?.image?.b64_json ? `data:${data?.image?.mimeType || "image/png"};base64,${data.image.b64_json}` : "")
               };
             } catch (error) {
-              return { model, ok: false, error: error?.message || "Image generation failed." };
-            }
+              return { model, ok: false, error: error?.message || "Image generation failed." };            }
           }));
           setImageCompareResults(results);
         } finally {
@@ -597,8 +631,7 @@ export default function Home() {
                 </div>
               )}
 
-              {mode === "compare" && compareResults.length > 0 && (
-                <div className="compareGrid">
+              {mode === "compare" && compareResults.length > 0 && (                <div className="compareGrid">
                   {compareResults.map((result) => (
                     <article className={`compareCard ${result.ok === false ? "compareError" : ""}`} key={result.model}>
                       <div className="compareHead"><div><b>{result.model}</b><small>{MODEL_CATEGORIES.find((item) => item.id === getModelCategory(result.model))?.label || "General"} · {result.loading ? "Working…" : result.ok === false ? "Error" : `${((result.ms || 0) / 1000).toFixed(1)}s · Done`}</small></div><span className={result.loading ? "compareDot running" : result.ok === false ? "compareDot error" : "compareDot"} /></div>
@@ -707,7 +740,7 @@ export default function Home() {
                         onClick={() => setCompareModels((current) => current.filter((item) => item !== id))}
                         title="Remove model"
                       >
-                        {id}<span>×</span>
+                        <ModelIcon model={textModels.find((item) => (item?.id || item) === id) || id} size={22} />{id}<span>×</span>
                       </button>
                     ))}
                   </div>
@@ -736,7 +769,7 @@ export default function Home() {
                           });
                         }}>
                           <span className="modelCheck">{selected ? "✓" : ""}</span>
-                          <span className="modelInfo"><b>{label}</b><small>{id} · {category}</small></span>
+                          <ModelIcon model={m} size={30} /><span className="modelInfo"><b>{label}</b><small>{id} · {category}</small></span>
                           {selected && <span className="modelSelected">Selected</span>}
                         </button>
                       );
