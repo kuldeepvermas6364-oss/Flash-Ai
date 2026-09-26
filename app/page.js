@@ -670,8 +670,28 @@ export default function Home() {
               <div className="modelPickerSection">
                 <div className="modelPickerTitle">
                   <span>Compare models</span>
-                  <b>{compareModels.length}/5</b>
+                  <div className="modelPickerCount">
+                    <b>{compareModels.length}/5</b>
+                    {compareModels.length > 0 && (
+                      <button type="button" className="modelClear" onClick={() => setCompareModels([])}>Clear</button>
+                    )}
+                  </div>
                 </div>
+                {compareModels.length > 0 && (
+                  <div className="selectedModelChips" aria-label="Selected comparison models">
+                    {compareModels.map((id) => (
+                      <button
+                        type="button"
+                        key={id}
+                        className="selectedModelChip"
+                        onClick={() => setCompareModels((current) => current.filter((item) => item !== id))}
+                        title="Remove model"
+                      >
+                        {id}<span>×</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="modelCategoryTabs">
                   <button type="button" className={compareCategory === "all" ? "active" : ""} onClick={() => setCompareCategory("all")}>All</button>
                   {MODEL_CATEGORIES.map((category) => (
