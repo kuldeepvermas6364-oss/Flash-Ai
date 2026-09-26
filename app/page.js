@@ -550,7 +550,7 @@ export default function Home() {
                 <div className="compareGrid">
                   {compareResults.map((result) => (
                     <article className={`compareCard ${result.ok === false ? "compareError" : ""}`} key={result.model}>
-                      <div className="compareHead"><div><b>{result.model}</b><small>{result.loading ? "Working…" : result.ok === false ? "Error" : `${((result.ms || 0) / 1000).toFixed(1)}s`}</small></div><span className={result.loading ? "compareDot running" : "compareDot"} /></div>
+                      <div className="compareHead"><div><b>{result.model}</b><small>{MODEL_CATEGORIES.find((item) => item.id === getModelCategory(result.model))?.label || "General"} · {result.loading ? "Working…" : result.ok === false ? "Error" : `${((result.ms || 0) / 1000).toFixed(1)}s · Done`}</small></div><span className={result.loading ? "compareDot running" : result.ok === false ? "compareDot error" : "compareDot"} /></div>
                       <div className="compareBody">{result.loading ? <div className="typing">Thinking<span>.</span><span>.</span><span>.</span></div> : result.content}</div>
                       {!result.loading && result.content && <button className="copy" onClick={() => copyMessage(result.content, `compare-${result.model}`)}>{copied === `compare-${result.model}` ? "Copied" : "Copy"}</button>}
                     </article>
