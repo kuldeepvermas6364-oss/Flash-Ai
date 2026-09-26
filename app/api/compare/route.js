@@ -77,14 +77,41 @@ export async function POST(request) {
       }
     };
 
-    const results = await Promise.all(compatibleModels.map(run));
-    return NextResponse.json({
-      ok: true,
-      results,
-      skippedModels: incompatibleModels.map((model) => ({
-        model,
-        reason: "Structured-request-only model; skipped in free-form comparison."
-      }))
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        const send = (payload) => controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify(payload)}\\n\\n`)
+        );
+
+        const jobs = compatibleModels.map((model) =>
+          run(model).then((result) => send({ type: "result", result }))
+        );
+
+        Promise.all(jobs)
+          .then(() => {
+            send({
+              type: "complete",
+              skippedModels: incompatibleModels.map((model) => ({
+                model,
+                reason: "Structured-request-only model; skipped in free-form comparison."
+              }))
+            });
+            controller.close();
+          })
+          .catch((error) => {
+            send({ type: "error", message: error?.message || "Comparison failed." });
+            controller.close();
+          });
+      }
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive"
+      }
     });
   } catch {
     return NextResponse.json({ error: "Invalid comparison request." }, { status: 500 });
