@@ -9,6 +9,19 @@ import {
   Send, Settings, History, Menu, X, GitCompare, Copy, Download, Eye, LogOut
 } from "lucide-react";
 
+const MODEL_CATEGORIES = [
+  { id: "reasoning", label: "Reasoning", match: /reason|thinking|r1|o1|o3/i },
+  { id: "coding", label: "Coding", match: /code|coder|codestral|starcoder/i },
+  { id: "creative", label: "Creative", match: /creative|llama|qwen|claude|gemma|mistral/i },
+  { id: "fast", label: "Fast", match: /mini|small|flash|haiku|lite|nano|fast/i }
+];
+
+function getModelCategory(model) {
+  const id = String(model?.id || model || "");
+  const found = MODEL_CATEGORIES.find((category) => category.match.test(id));
+  return found?.id || "general";
+}
+
 const modes = [
   { id: "chat", label: "Chat", icon: MessageSquare, hint: "Ask anything" },
   { id: "research", label: "Research", icon: Search, hint: "Analyze a topic" },
@@ -32,7 +45,7 @@ export default function Home() {
   const [imageModels, setImageModels] = useState([]);
   const [textModel, setTextModel] = useState("openai");
   const [imageModel, setImageModel] = useState("flux");
-  const [compareModels, setCompareModels] = useState([]);
+  const [compareModels, setCompareModels] = useState([]);\n  const [compareCategory, setCompareCategory] = useState("all");
   const [compareResults, setCompareResults] = useState([]);
   const [imageCompare, setImageCompare] = useState(false);
   const [imageCompareModels, setImageCompareModels] = useState([]);
@@ -627,35 +640,37 @@ export default function Home() {
                   <span>Compare models</span>
                   <b>{compareModels.length}/5</b>
                 </div>
+                <div className="modelCategoryTabs">
+                  <button type="button" className={compareCategory === "all" ? "active" : ""} onClick={() => setCompareCategory("all")}>All</button>
+                  {MODEL_CATEGORIES.map((category) => (
+                    <button key={category.id} type="button" className={compareCategory === category.id ? "active" : ""} onClick={() => setCompareCategory(category.id)}>{category.label}</button>
+                  ))}
+                </div>
                 <div className="modelPicker">
-                  {textModels.filter((m) => !/^typesafe\//i.test(m?.id || m)).map((m) => {
-                    const id = m?.id || m;
-                    const label = m?.name || id;
-                    const selected = compareModels.includes(id);
-                    return (
-                      <button
-                        type="button"
-                        key={id}
-                        className={`modelOption ${selected ? "selected" : ""}`}
-                        onClick={() => {
+                  {textModels
+                    .filter((m) => !/^typesafe\//i.test(m?.id || m))
+                    .filter((m) => compareCategory === "all" || getModelCategory(m) === compareCategory)
+                    .map((m) => {
+                      const id = m?.id || m;
+                      const label = m?.name || id;
+                      const category = MODEL_CATEGORIES.find((item) => item.id === getModelCategory(m))?.label || "General";
+                      const selected = compareModels.includes(id);
+                      return (
+                        <button type="button" key={id} className={`modelOption ${selected ? "selected" : ""}`} onClick={() => {
                           setCompareModels((current) => {
                             if (current.includes(id)) return current.filter((item) => item !== id);
                             if (current.length >= 5) return current;
                             return [...current, id];
                           });
-                        }}
-                      >
-                        <span className="modelCheck">{selected ? "✓" : ""}</span>
-                        <span className="modelInfo">
-                          <b>{label}</b>
-                          <small>{id}</small>
-                        </span>
-                        {selected && <span className="modelSelected">Selected</span>}
-                      </button>
-                    );
-                  })}
+                        }}>
+                          <span className="modelCheck">{selected ? "✓" : ""}</span>
+                          <span className="modelInfo"><b>{label}</b><small>{id} · {category}</small></span>
+                          {selected && <span className="modelSelected">Selected</span>}
+                        </button>
+                      );
+                    })}
                 </div>
-                <small className="modalNote">Choose up to 5 models. The same task is sent to every selected model.</small>
+                <small className="modalNote">Choose up to 5 models from any categories. The same task is sent to every selected model simultaneously.</small>
               </div>
               <div className="modelPickerSection">
                 <div className="modelPickerTitle">
