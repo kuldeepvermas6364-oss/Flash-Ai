@@ -36,11 +36,14 @@ export default function Home() {
   const [imageCompareResults, setImageCompareResults] = useState([]);
   const [imageViewer, setImageViewer] = useState(null);
   const [codePreview, setCodePreview] = useState(null);
+  const [chatMotion, setChatMotion] = useState("smooth");
 
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("flash-ai-history") || "[]");
       if (Array.isArray(saved)) setHistory(saved);
+      const savedMotion = localStorage.getItem("flash-ai-chat-motion");
+      if (savedMotion) setChatMotion(savedMotion);
     } catch {}
     Promise.all([fetch("/api/chat"), fetch("/api/pollinations/models"), fetch("/api/pollinations/image-models")]).then(async ([chatRes, textRes, imageRes]) => {
       const data = await chatRes.json();
@@ -312,6 +315,18 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
+  const highlightCode = (code, language) => {
+    const escaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    let html = escaped;
+    html = html.replace(/(\/\/.*$|\/\*[\\s\\S]*?\*\/|<!--.*?-->)/gm, '<span class="tok-comment">$1</span>');
+    html = html.replace(/(&quot;.*?&quot;|&quot;.*?&quot;|".*?"|\'.*?\')/g, '<span class="tok-string">$1</span>');
+    html = html.replace(/\b(const|let|var|function|return|if|else|for|while|class|new|import|from|export|async|await|true|false|null|undefined|def|in|print)\b/g, '<span class="tok-keyword">$1</span>');
+    html = html.replace(/(&lt;\/?[a-zA-Z][\w-]*)(?=[\s&gt;])/g, '<span class="tok-tag">$1</span>');
+    html = html.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-number">$1</span>');
+    html = html.replace(/\b([a-zA-Z_$][\w$]*)(?=\()/g, '<span class="tok-function">$1</span>');
+    return { __html: html };
+  };
+
   const renderCodeContent = (content, messageIndex) => {
     const parts = content.split(/```([a-zA-Z0-9_+-]*)\n?([\s\S]*?)```/g);
     if (parts.length === 1) return <div className="plainResponse">{content}</div>;
@@ -332,7 +347,7 @@ export default function Home() {
               <button type="button" onClick={() => downloadCode(code.trim(), language)}><Download size={13} /> Save</button>
             </div>
           </div>
-          {codePreview === previewKey && isHtml ? <iframe className="codePreview" title="Live HTML preview" sandbox="allow-scripts" srcDoc={code.trim()} /> : <pre><code>{code.trim()}</code></pre>}
+          {codePreview === previewKey && isHtml ? <iframe className="codePreview" title="Live HTML preview" sandbox="allow-scripts" srcDoc={code.trim()} /> : <pre><code dangerouslySetInnerHTML={highlightCode(code.trim(), language)} /></pre>}
         </section>
       );
     }
@@ -368,7 +383,7 @@ export default function Home() {
       </div>
     )}
 
-    <main className="shell">
+    <main className={`shell motion-${chatMotion}`}>
       <aside className={`sidebar ${mobileOpen ? "open" : ""}`}>
         <div className="brand">
           <div className="logo"><Sparkles size={20} /></div>
@@ -556,6 +571,17 @@ export default function Home() {
               <div className="modalHead">
                 <div><b>Flash AI Settings</b><small>Provider and workspace controls</small></div>
                 <button className="icon" onClick={() => setSettingsOpen(false)}><X size={18} /></button>
+              </div>
+              <div className="modelPickerSection motionSettings">
+                <div className="modelPickerTitle"><span>Chat animation & transition</span><b>{chatMotion === "none" ? "Off" : chatMotion}</b></div>
+                <select className="motionSelect" value={chatMotion} onChange={(e) => { const value = e.target.value; setChatMotion(value); localStorage.setItem("flash-ai-chat-motion", value); }}>
+                  <option value="smooth">Smooth — fade + slide</option>
+                  <option value="slide">Slide — fast entrance</option>
+                  <option value="glow">Glow — premium emphasis</option>
+                  <option value="minimal">Minimal — subtle</option>
+                  <option value="none">Off — no animation</option>
+                </select>
+                <small className="modalNote">Choose how new chat messages and AI responses enter the screen.</small>
               </div>
               <label>Text model<select value={textModel} onChange={(e) => setTextModel(e.target.value)}>
                 {textModels.map((m) => { const id = m?.id || m; return <option key={id} value={id}>{m?.name || id}</option>; })}
