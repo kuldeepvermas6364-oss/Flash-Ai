@@ -91,12 +91,12 @@ export default function Home() {
       code: "Help me build or debug this code: ",
       create: "Help me create something for this idea: "
     };
-    if (nextMode === "compare") setInput("");
-    else if (nextMode !== "chat") setInput(prompts[nextMode]);
+    if (nextMode === "compare" || nextMode === "image") setInput("");
+    else if (nextMode !== "chat") setInput(prompts[nextMode] || "");
   };
 
   const send = async () => {
-    const text = input.trim();
+    const text = String(input || "").trim();
     if (!text || loading) return;
 
     if (mode === "compare") {
@@ -359,7 +359,7 @@ export default function Home() {
               }}
               placeholder={`Ask Flash AI in ${active.label.toLowerCase()} mode...`}
             />
-            <button className="send" onClick={send} disabled={loading || !input.trim()}><Send size={18} /></button>
+            <button className="send" onClick={send} disabled={loading || !String(input || "").trim()}><Send size={18} /></button>
           </div>
           <small>Flash AI can make mistakes. Verify important information.</small>
         </div>
