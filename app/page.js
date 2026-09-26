@@ -218,16 +218,21 @@ export default function Home() {
 
         <div className="history">
           <span><History size={15} /> Recent</span>
-          <p>{messages.length ? "Current conversation" : "No conversations yet"}</p>
+          {history.length ? history.slice(0, 8).map((item) => (
+            <button key={item.id} className="historyItem" onClick={() => loadConversation(item)}>
+              <MessageSquare size={14} />
+              <span>{item.title}</span>
+            </button>
+          )) : <p>No conversations yet</p>}
         </div>
-        <button className="settings"><Settings size={17} /> Settings</button>
+        <button className="settings" onClick={() => setSettingsOpen(true)}><Settings size={17} /> Settings</button>
       </aside>
 
       <section className="main">
         <header>
           <button className="mobile" onClick={() => setMobileOpen(true)}><Menu /></button>
           <div><span className="status" /> Flash AI <small>Online</small></div>
-          <button className="icon"><Settings size={18} /></button>
+          <button className="icon" onClick={() => setSettingsOpen(true)}><Settings size={18} /></button>
         </header>
 
         <div className="content">
@@ -274,6 +279,21 @@ export default function Home() {
           <div className="modebar">
             <span>{active.label}</span>
             <small>{active.hint}</small>
+            {mode === "image" ? (
+              <select value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Image model">
+                {imageModels.map((m) => {
+                  const id = m?.id || m;
+                  return <option key={id} value={id}>{m?.name || id}</option>;
+                })}
+              </select>
+            ) : (
+              <select value={textModel} onChange={(e) => setTextModel(e.target.value)} aria-label="Text model">
+                {textModels.map((m) => {
+                  const id = m?.id || m;
+                  return <option key={id} value={id}>{m?.name || id}</option>;
+                })}
+              </select>
+            )}
           </div>
           <div className="input">
             <button title="Attach"><Paperclip size={19} /></button>
@@ -292,6 +312,23 @@ export default function Home() {
           </div>
           <small>Flash AI can make mistakes. Verify important information.</small>
         </div>
+        {settingsOpen && (
+          <div className="settingsOverlay" onClick={() => setSettingsOpen(false)}>
+            <div className="settingsPanel" onClick={(e) => e.stopPropagation()}>
+              <div className="settingsHeader">
+                <div><b>Flash AI Settings</b><small>Provider and workspace controls</small></div>
+                <button className="icon" onClick={() => setSettingsOpen(false)}><X size={18} /></button>
+              </div>
+              <label>Text model<select value={textModel} onChange={(e) => setTextModel(e.target.value)}>
+                {textModels.map((m) => { const id = m?.id || m; return <option key={id} value={id}>{m?.name || id}</option>; })}
+              </select></label>
+              <label>Image model<select value={imageModel} onChange={(e) => setImageModel(e.target.value)}>
+                {imageModels.map((m) => { const id = m?.id || m; return <option key={id} value={id}>{m?.name || id}</option>; })}
+              </select></label>
+              <div className="service"><span className="status" /> {serviceStatus}</div>
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );
