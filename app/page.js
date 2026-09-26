@@ -47,7 +47,6 @@ export default function Home() {
       if (im.some((m) => (m?.id || m) === "flux")) setImageModel("flux");
       else if (im[0]) setImageModel(im[0]?.id || im[0]);
       setServiceStatus(data?.configured ? `Connected · ${data.model}` : "API key not configured");
-      setServiceStatus(data?.configured ? `Connected · ${data.model}` : "API key not configured");
     }).catch(() => setServiceStatus("Unavailable"));
   }, []);
 
@@ -55,11 +54,16 @@ export default function Home() {
     if (!messages.length || loading) return;
     const timer = setTimeout(() => {
       const first = messages.find((m) => m.role === "user")?.content || "New conversation";
-      const item = { id: Date.now(), title: first.slice(0, 52), messages, mode, updatedAt: new Date().toISOString() };
       setHistory((current) => {
-        const next = [item, ...current].slice(0, 20);
-        localStorage.setItem("flash-ai-history", JSON.stringify(next));
-        return next;
+        const existing = current[0];
+        const sameConversation = existing && existing.mode === mode && existing.messages?.length <= messages.length && existing.messages?.[0]?.content === messages[0]?.content;
+        const item = sameConversation
+          ? { ...existing, title: first.slice(0, 52), messages, mode, updatedAt: new Date().toISOString() }
+          : { id: Date.now(), title: first.slice(0, 52), messages, mode, updatedAt: new Date().toISOString() };
+        const next = sameConversation ? [item, ...current.slice(1)] : [item, ...current];
+        const trimmed = next.slice(0, 20);
+        localStorage.setItem("flash-ai-history", JSON.stringify(trimmed));
+        return trimmed;
       });
     }, 500);
     return () => clearTimeout(timer);
