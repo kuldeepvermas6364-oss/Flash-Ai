@@ -217,15 +217,23 @@ export default function Home() {
         const applyEvent = (eventText) => {
           const line = eventText.split("\n").find((entry) => entry.startsWith("data:"));
           if (!line) return;
-          const event = JSON.parse(line.slice(5).trim());
-          if (event.type === "result" && event.result) {
-            setCompareResults((current) =>
-              current.map((item) => item.model === event.result.model
-                ? { ...item, ...event.result, loading: false }
-                : item)
-            );
-          } else if (event.type === "error") {
-            throw new Error(event.message || "Comparison failed.");
+          try {
+            const event = JSON.parse(line.slice(5).trim());
+            if (event.type === "result" && event.result) {
+              setCompareResults((current) =>
+                current.map((item) => item.model === event.result.model
+                  ? { ...item, ...event.result, loading: false }
+                  : item)
+              );
+            } else if (event.type === "error") {
+              setCompareResults((current) =>
+                current.map((item) => item.loading
+                  ? { ...item, ok: false, loading: false, content: event.message || "Comparison failed." }
+                  : item)
+              );
+            }
+          } catch {
+            // Ignore an incomplete/malformed SSE event so completed model results stay visible.
           }
         };
 
@@ -239,7 +247,11 @@ export default function Home() {
         }
         if (buffer.trim()) applyEvent(buffer);
       } catch (error) {
-        setCompareResults(compareModels.map((model) => ({ model, ok: false, content: error?.message || "Comparison failed." })));
+        setCompareResults((current) =>
+          current.map((item) => item.loading
+            ? { ...item, ok: false, loading: false, content: error?.message || "Comparison stream failed." }
+            : item)
+        );
       }
       return;
     }
