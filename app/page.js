@@ -317,14 +317,18 @@ export default function Home() {
 
   const highlightCode = (code, language) => {
     const escaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    let html = escaped;
-    html = html.replace(/(\/\/.*$|\/\*[\\s\\S]*?\*\/|<!--.*?-->)/gm, '<span class="tok-comment">$1</span>');
-    html = html.replace(/(&quot;.*?&quot;|&quot;.*?&quot;|".*?"|\'.*?\')/g, '<span class="tok-string">$1</span>');
-    html = html.replace(/\b(const|let|var|function|return|if|else|for|while|class|new|import|from|export|async|await|true|false|null|undefined|def|in|print)\b/g, '<span class="tok-keyword">$1</span>');
-    html = html.replace(/(&lt;\/?[a-zA-Z][\w-]*)(?=[\s&gt;])/g, '<span class="tok-tag">$1</span>');
-    html = html.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-number">$1</span>');
-    html = html.replace(/\b([a-zA-Z_$][\w$]*)(?=\()/g, '<span class="tok-function">$1</span>');
-    return { __html: html };
+    const tokenPattern = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->|&quot;.*?&quot;|".*?"|'.*?'|&lt;\/?[a-zA-Z][\w-]*(?=[\s&gt;])|\b(?:const|let|var|function|return|if|else|for|while|class|new|import|from|export|async|await|true|false|null|undefined|def|in|print)\b|\b\d+(?:\.\d+)?\b|\b[a-zA-Z_$][\w$]*(?=\()/g);
+    return {
+      __html: escaped.replace(tokenPattern, (token) => {
+        let type = "tok-function";
+        if (/^\/\//.test(token) || /^\/\*/.test(token) || /^<!--/.test(token)) type = "tok-comment";
+        else if (/^&quot;|^"|^'/.test(token)) type = "tok-string";
+        else if (/^&lt;/.test(token)) type = "tok-tag";
+        else if (/^\d/.test(token)) type = "tok-number";
+        else if (/^(const|let|var|function|return|if|else|for|while|class|new|import|from|export|async|await|true|false|null|undefined|def|in|print)$/.test(token)) type = "tok-keyword";
+        return '<span class="' + type + '">' + token + "</span>";
+      })
+    };
   };
 
   const renderCodeContent = (content, messageIndex) => {
