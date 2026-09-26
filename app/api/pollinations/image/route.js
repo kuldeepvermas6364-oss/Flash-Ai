@@ -17,17 +17,28 @@ export async function POST(request) {
     if (!prompt) return NextResponse.json({ error: "Image prompt is required." }, { status: 400 });
     const key = process.env.POLLINATIONS_API_KEY;
     if (!key) return NextResponse.json({ error: "Pollinations is not configured. Add POLLINATIONS_API_KEY in Vercel." }, { status: 503 });
-    const response = await fetch(BASE_URL + "/v1/images/generations", {
-      method: "POST",
-      headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, prompt, n: 1, response_format: "url" })
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+    let response;
+    try {
+      response = await fetch(BASE_URL + "/v1/images/generations", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, prompt, n: 1, response_format: "url" }),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return NextResponse.json({ error: data?.error?.message || data?.error || "Pollinations returned HTTP " + response.status }, { status: response.status });
     const image = data?.data?.[0];
     if (!image?.url && !image?.b64_json) return NextResponse.json({ error: "Pollinations returned no image." }, { status: 502 });
     return NextResponse.json({ ok: true, model, image: image.url ? { url: image.url } : { b64_json: image.b64_json } });
-  } catch {
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      return NextResponse.json({ error: "Image generation timed out. Please try again." }, { status: 504 });
+    }
     return NextResponse.json({ error: "Invalid request or Pollinations image service error." }, { status: 500 });
   }
 }
