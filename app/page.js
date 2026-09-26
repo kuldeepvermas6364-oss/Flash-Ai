@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Sparkles, Plus, MessageSquare, Search, Code2, Image, Paperclip,
   Send, Settings, History, Menu, X
@@ -20,6 +20,36 @@ export default function Home() {
   const [mode, setMode] = useState("chat");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [copied, setCopied] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [serviceStatus, setServiceStatus] = useState("Checking…");
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("flash-ai-history") || "[]");
+      if (Array.isArray(saved)) setHistory(saved);
+    } catch {}
+    fetch("/api/chat").then((r) => r.json()).then((data) => {
+      setServiceStatus(data?.configured ? `Connected · ${data.model}` : "API key not configured");
+    }).catch(() => setServiceStatus("Unavailable"));
+  }, []);
+
+  useEffect(() => {
+    if (!messages.length) return;
+    const first = messages.find((m) => m.role === "user")?.content || "New conversation";
+    const item = { id: Date.now(), title: first.slice(0, 52), messages, mode, updatedAt: new Date().toISOString() };
+    setHistory((current) => {
+      const next = [item, ...current.filter((h) => h.messages !== messages)];
+      localStorage.setItem("flash-ai-history", JSON.stringify(next.slice(0, 20)));
+      return next.slice(0, 20);
+    });
+  }, [messages.length]);
+
+  const loadConversation = (item) => {
+    setMessages(item.messages || []);
+    setMode(item.mode || "chat");
+    setMobileOpen(false);
+  };
 
   const startMode = (nextMode) => {
     setMode(nextMode);
@@ -133,7 +163,7 @@ export default function Home() {
           <button className="closeMobile" onClick={() => setMobileOpen(false)}><X size={18} /></button>
         </div>
 
-        <button className="new" onClick={() => { setMessages([]); setMobileOpen(false); }}>
+        <button className="new" onClick={() => { setMessages([]); setMode("chat"); setInput(""); setMobileOpen(false); }}>
           <Plus size={18} /> New chat
         </button>
 
