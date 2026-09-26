@@ -12,7 +12,7 @@ const modes = [
   { id: "code", label: "Code", icon: Code2, hint: "Build and debug" },
   { id: "create", label: "Create", icon: Image, hint: "Create ideas" },
   { id: "image", label: "Image", icon: Image, hint: "Generate images" },
-  { id: "compare", label: "Compare", icon: GitCompare2, hint: "Run up to 5 AIs together" }
+  { id: "compare", label: "Compare", icon: GitCompare, hint: "Run up to 5 AIs together" }
 ];
 
 export default function Home() {
