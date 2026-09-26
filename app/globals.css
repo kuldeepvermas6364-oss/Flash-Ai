@@ -64,7 +64,7 @@ header{animation:headerIn .5s ease-out both}
 .compareDot.running{animation:statusPulse 1s infinite}
 .compareBody{min-height:100px;padding-top:11px;color:#c7d2e2;font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
 .compareError{border-color:#ff8a8a22}
-.compareError .compareDot{background:#ff8a8a;box-shadow:0 0 9px #ff8a8a}
+.compareError .compareDot,.compareDot.error{background:#ff8a8a;box-shadow:0 0 9px #ff8a8a}
 .settingsModal label select[multiple]{min-height:120px}
 .settingsModal label select[multiple] option{padding:6px 8px}
 @media(max-width:1100px){.compareGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
