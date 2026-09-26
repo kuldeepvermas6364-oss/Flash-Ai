@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   Sparkles, Plus, MessageSquare, Search, Code2, Image, Paperclip,
-  Send, Settings, History, Menu, X
+  Send, Settings, History, Menu, X, GitCompare2
 } from "lucide-react";
 
 const modes = [
@@ -11,7 +11,8 @@ const modes = [
   { id: "research", label: "Research", icon: Search, hint: "Analyze a topic" },
   { id: "code", label: "Code", icon: Code2, hint: "Build and debug" },
   { id: "create", label: "Create", icon: Image, hint: "Create ideas" },
-  { id: "image", label: "Image", icon: Image, hint: "Generate images" }
+  { id: "image", label: "Image", icon: Image, hint: "Generate images" },
+  { id: "compare", label: "Compare", icon: GitCompare2, hint: "Run up to 5 AIs together" }
 ];
 
 export default function Home() {
@@ -28,6 +29,8 @@ export default function Home() {
   const [imageModels, setImageModels] = useState([]);
   const [textModel, setTextModel] = useState("openai");
   const [imageModel, setImageModel] = useState("flux");
+  const [compareModels, setCompareModels] = useState([]);
+  const [compareResults, setCompareResults] = useState([]);
 
   useEffect(() => {
     try {
@@ -46,6 +49,7 @@ export default function Home() {
       else if (tm[0]) setTextModel(tm[0]?.id || tm[0]);
       if (im.some((m) => (m?.id || m) === "flux")) setImageModel("flux");
       else if (im[0]) setImageModel(im[0]?.id || im[0]);
+      setCompareModels(tm.slice(0, 5).map((m) => m?.id || m).filter(Boolean));
       setServiceStatus(data?.configured ? `Connected · ${data.model}` : "API key not configured");
     }).catch(() => setServiceStatus("Unavailable"));
   }, []);
@@ -83,12 +87,36 @@ export default function Home() {
       code: "Help me build or debug this code: ",
       create: "Help me create something for this idea: "
     };
-    if (nextMode !== "chat") setInput(prompts[nextMode]);
+    if (nextMode === "compare") setInput("");
+    else if (nextMode !== "chat") setInput(prompts[nextMode]);
   };
 
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
+
+    if (mode === "compare") {
+      if (!compareModels.length) {
+        setMessages((current) => [...current, { role: "assistant", content: "Select at least one model for comparison." }]);
+        return;
+      }
+      setInput("");
+      setCompareResults(compareModels.map((model) => ({ model, ok: true, content: "", loading: true })));
+      try {
+        const response = await fetch("/api/compare", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: [...messages, { role: "user", content: text }], models: compareModels })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data?.error || "Comparison failed.");
+        setMessages((current) => [...current, { role: "user", content: text }]);
+        setCompareResults(data.results || []);
+      } catch (error) {
+        setCompareResults(compareModels.map((model) => ({ model, ok: false, content: error?.message || "Comparison failed." })));
+      }
+      return;
+    }
 
     if (mode === "image") {
       setInput("");
@@ -275,6 +303,17 @@ export default function Home() {
                 </div>
               ))}
               {loading && <div className="msg assistant"><div className="typing">Generating<span>.</span><span>.</span><span>.</span></div></div>}
+              {mode === "compare" && compareResults.length > 0 && (
+                <div className="compareGrid">
+                  {compareResults.map((result) => (
+                    <article className={`compareCard ${result.ok === false ? "compareError" : ""}`} key={result.model}>
+                      <div className="compareHead"><div><b>{result.model}</b><small>{result.loading ? "Working…" : result.ok === false ? "Error" : `${((result.ms || 0) / 1000).toFixed(1)}s`}</small></div><span className={result.loading ? "compareDot running" : "compareDot"} /></div>
+                      <div className="compareBody">{result.loading ? <div className="typing">Thinking<span>.</span><span>.</span><span>.</span></div> : result.content}</div>
+                      {!result.loading && result.content && <button className="copy" onClick={() => copyMessage(result.content, `compare-${result.model}`)}>{copied === `compare-${result.model}` ? "Copied" : "Copy"}</button>}
+                    </article>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
