@@ -31,6 +31,9 @@ export default function Home() {
   const [imageModel, setImageModel] = useState("flux");
   const [compareModels, setCompareModels] = useState([]);
   const [compareResults, setCompareResults] = useState([]);
+  const [imageCompare, setImageCompare] = useState(false);
+  const [imageCompareModels, setImageCompareModels] = useState([]);
+  const [imageCompareResults, setImageCompareResults] = useState([]);
 
   useEffect(() => {
     try {
@@ -45,6 +48,8 @@ export default function Home() {
       const im = Array.isArray(imageData?.data) ? imageData.data : Array.isArray(imageData) ? imageData : [];
       setTextModels(tm);
       setImageModels(im);
+      const liveImageIds = im.map((m) => m?.id || m).filter(Boolean);
+      setImageCompareModels(liveImageIds.slice(0, 3));
       if (tm.some((m) => (m?.id || m) === "openai")) setTextModel("openai");
       else if (tm[0]) setTextModel(tm[0]?.id || tm[0]);
       if (im.some((m) => (m?.id || m) === "flux")) setImageModel("flux");
@@ -91,7 +96,10 @@ export default function Home() {
       code: "Help me build or debug this code: ",
       create: "Help me create something for this idea: "
     };
-    if (nextMode === "compare" || nextMode === "image") setInput("");
+    if (nextMode === "compare" || nextMode === "image") {
+      setInput("");
+      if (nextMode !== "image") setImageCompare(false);
+    }
     else if (nextMode !== "chat") setInput(prompts[nextMode] || "");
   };
 
@@ -125,14 +133,60 @@ export default function Home() {
     if (mode === "image") {
       setInput("");
       setLoading(true);
+
+      const selectedImageModels = (imageCompare ? imageCompareModels : [imageModel]).slice(0, 3);
+      if (!selectedImageModels.length) {
+        setMessages((current) => [...current, { role: "assistant", content: "Select at least one image model." }]);
+        setLoading(false);
+        return;
+      }
+
+      if (imageCompare) {
+        setImageCompareResults(selectedImageModels.map((model) => ({ model, loading: true })));
+        setMessages((current) => [...current, { role: "user", content: text }]);
+
+        try {
+          const results = await Promise.all(selectedImageModels.map(async (model) => {
+            try {
+              const response = await fetch("/api/pollinations/image", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: text, model })
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) throw new Error(data?.error || `Image request failed (${response.status})`);
+              return {
+                model,
+                ok: true,
+                imageUrl: data?.image?.url ||
+                  data?.image?.dataUrl ||
+                  (data?.image?.b64_json ? `data:${data?.image?.mimeType || "image/png"};base64,${data.image.b64_json}` : "")
+              };
+            } catch (error) {
+              return { model, ok: false, error: error?.message || "Image generation failed." };
+            }
+          }));
+          setImageCompareResults(results);
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
       try {
-        const response = await fetch("/api/pollinations/image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: text, model: imageModel }) });
+        const response = await fetch("/api/pollinations/image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: text, model: imageModel })
+        });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data?.error || `Image request failed (${response.status})`);
         setMessages((current) => [...current, { role: "user", content: text }, { role: "assistant", content: `Generated with ${data.model || imageModel}`, imageUrl: data?.image?.url || data?.image?.dataUrl || (data?.image?.b64_json ? `data:${data?.image?.mimeType || "image/png"};base64,${data.image.b64_json}` : "") }]);
       } catch (error) {
         setMessages((current) => [...current, { role: "user", content: text }, { role: "assistant", content: error?.message || "Image generation failed." }]);
-      } finally { setLoading(false); }
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
@@ -307,6 +361,26 @@ export default function Home() {
                 </div>
               ))}
               {loading && <div className="msg assistant"><div className="typing">Generating<span>.</span><span>.</span><span>.</span></div></div>}
+              {mode === "image" && imageCompare && imageCompareResults.length > 0 && (
+                <div className="imageCompareGrid">
+                  {imageCompareResults.map((result) => (
+                    <article className={`imageCompareCard ${result.ok === false ? "compareError" : ""}`} key={result.model}>
+                      <div className="imageCompareHead">
+                        <b>{result.model}</b>
+                        <span className={result.loading ? "compareDot running" : result.ok === false ? "compareDot imageCompareErrorDot" : "compareDot"} />
+                      </div>
+                      {result.loading ? (
+                        <div className="imageCompareLoading">Generating<span>.</span><span>.</span><span>.</span></div>
+                      ) : result.imageUrl ? (
+                        <img className="compareImage" src={result.imageUrl} alt={`Generated with ${result.model}`} />
+                      ) : (
+                        <div className="imageCompareError">{result.error || "Image generation failed."}</div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+
               {mode === "compare" && compareResults.length > 0 && (
                 <div className="compareGrid">
                   {compareResults.map((result) => (
@@ -331,12 +405,19 @@ export default function Home() {
                 {compareModels.length}/5 models selected · Configure
               </button>
             ) : mode === "image" ? (
-              <select value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Image model">
-                {imageModels.map((m) => {
-                  const id = m?.id || m;
-                  return <option key={id} value={id}>{m?.name || id}</option>;
-                })}
-              </select>
+              <>
+                {!imageCompare && (
+                  <select value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Image model">
+                    {imageModels.map((m) => {
+                      const id = m?.id || m;
+                      return <option key={id} value={id}>{m?.name || id}</option>;
+                    })}
+                  </select>
+                )}
+                <button className={`imageCompareToggle ${imageCompare ? "active" : ""}`} onClick={() => setImageCompare((value) => !value)}>
+                  {imageCompare ? `3 images · Configure` : "Compare 3 images"}
+                </button>
+              </>
             ) : (
               <select value={textModel} onChange={(e) => setTextModel(e.target.value)} aria-label="Text model">
                 {textModels.map((m) => {
@@ -410,6 +491,41 @@ export default function Home() {
                   })}
                 </div>
                 <small className="modalNote">Choose up to 5 models. The same task is sent to every selected model.</small>
+              </div>
+              <div className="modelPickerSection">
+                <div className="modelPickerTitle">
+                  <span>Image comparison</span>
+                  <b>{imageCompareModels.length}/3</b>
+                </div>
+                <div className="modelPicker">
+                  {imageModels.map((m) => {
+                    const id = m?.id || m;
+                    const label = m?.name || id;
+                    const selected = imageCompareModels.includes(id);
+                    return (
+                      <button
+                        type="button"
+                        key={`image-${id}`}
+                        className={`modelOption ${selected ? "selected" : ""}`}
+                        onClick={() => {
+                          setImageCompareModels((current) => {
+                            if (current.includes(id)) {
+                              const next = current.filter((item) => item !== id);
+                              return next;
+                            }
+                            if (current.length >= 3) return current;
+                            return [...current, id];
+                          });
+                        }}
+                      >
+                        <span className="modelCheck">{selected ? "✓" : ""}</span>
+                        <span className="modelInfo"><b>{label}</b><small>{id}</small></span>
+                        {selected && <span className="modelSelected">Selected</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <small className="modalNote">Choose up to 3 image models. Flash AI generates them in parallel for the same prompt.</small>
               </div>
               <div className="service"><span className="status" /> {serviceStatus}</div>
             </div>
