@@ -12,8 +12,20 @@ export async function POST(request) {
       ? [...new Set(body.models.filter((m) => typeof m === "string" && m.trim()).map((m) => m.trim()))].slice(0, 5)
       : [];
 
+    // Some catalog entries are structured-output/evaluator models rather than
+    // free-form chat models. Keep them out of Flash AI's natural-language
+    // comparison flow so provider-specific native-request errors never leak to users.
+    const incompatibleModels = models.filter((model) => /^typesafe\//i.test(model));
+    const compatibleModels = models.filter((model) => !/^typesafe\//i.test(model));
+
     if (!messages.length) return NextResponse.json({ error: "Messages are required." }, { status: 400 });
     if (!models.length) return NextResponse.json({ error: "Select at least one model." }, { status: 400 });
+    if (!compatibleModels.length) {
+      return NextResponse.json({
+        error: "The selected model only accepts a native structured request and is not compatible with Flash AI's free-form comparison mode.",
+        incompatibleModels
+      }, { status: 400 });
+    }
 
     const key = process.env.POLLINATIONS_API_KEY;
     if (!key) return NextResponse.json({ error: "POLLINATIONS_API_KEY is not configured." }, { status: 503 });
@@ -65,8 +77,15 @@ export async function POST(request) {
       }
     };
 
-    const results = await Promise.all(models.map(run));
-    return NextResponse.json({ ok: true, results });
+    const results = await Promise.all(compatibleModels.map(run));
+    return NextResponse.json({
+      ok: true,
+      results,
+      skippedModels: incompatibleModels.map((model) => ({
+        model,
+        reason: "Structured-request-only model; skipped in free-form comparison."
+      }))
+    });
   } catch {
     return NextResponse.json({ error: "Invalid comparison request." }, { status: 500 });
   }
