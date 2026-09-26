@@ -472,12 +472,15 @@ export default function Home() {
             ) : mode === "image" ? (
               <>
                 {!imageCompare && (
-                  <select value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Image model">
-                    {imageModels.map((m) => {
-                      const id = m?.id || m;
-                      return <option key={id} value={id}>{m?.name || id}</option>;
-                    })}
-                  </select>
+                  <label className="imageModelControl">
+                    <span>Model</span>
+                    <select value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Choose image generation model">
+                      {imageModels.length ? imageModels.map((m) => {
+                        const id = m?.id || m;
+                        return <option key={id} value={id}>{m?.name || id}</option>;
+                      }) : <option value="flux">flux</option>}
+                    </select>
+                  </label>
                 )}
                 <button className={`imageCompareToggle ${imageCompare ? "active" : ""}`} onClick={() => setImageCompare((value) => !value)}>
                   {imageCompare ? `3 images · Configure` : "Compare 3 images"}
