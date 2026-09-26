@@ -206,7 +206,9 @@ export default function Home() {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data?.error || "Comparison failed.");
         setMessages((current) => [...current, { role: "user", content: text }]);
-        setCompareResults(data.results || []);
+        setCompareResults(
+          (data.results || []).map((result) => ({ ...result, loading: false }))
+        );
       } catch (error) {
         setCompareResults(compareModels.map((model) => ({ model, ok: false, content: error?.message || "Comparison failed." })));
       }
