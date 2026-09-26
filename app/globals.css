@@ -377,3 +377,16 @@ header{animation:headerIn .5s ease-out both}
   background: rgba(120,120,255,.18);
   border-color: rgba(150,150,255,.45);
 }
+/* Model brand icons */
+.modelBrandIcon{
+  flex:none;display:grid;place-items:center;border-radius:9px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.18);
+}
+.modelBrandIcon img{width:68%;height:68%;object-fit:contain;display:block}
+.modelBrandFallback{display:none;place-items:center;width:100%;height:100%;font-size:12px;font-weight:800;color:#eaf0ff}
+.modelOption .modelBrandIcon{border-radius:8px}
+.selectedModelChip .modelBrandIcon{margin-left:-2px}
+.compareModelName{display:flex;align-items:center;gap:8px;min-width:0}
+.compareModelName b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imageCompareHead .compareModelName{min-width:0}
