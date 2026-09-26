@@ -24,7 +24,8 @@ export async function POST(request) {
     const openRouterKey = process.env.OPENROUTER_API_KEY;
     const usePollinations = Boolean(pollinationsKey);
     const key = usePollinations ? pollinationsKey : openRouterKey;
-    const model = usePollinations ? (process.env.POLLINATIONS_TEXT_MODEL || "openai") : (process.env.OPENROUTER_MODEL || "openrouter/free");
+    const requestedModel = typeof body?.model === "string" ? body.model.trim() : "";
+    const model = usePollinations ? (requestedModel || process.env.POLLINATIONS_TEXT_MODEL || "openai") : (process.env.OPENROUTER_MODEL || "openrouter/free");
 
     if (!key) {
       return NextResponse.json(
