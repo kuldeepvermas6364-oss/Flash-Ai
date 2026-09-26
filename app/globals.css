@@ -257,3 +257,25 @@ header{animation:headerIn .5s ease-out both}
 .imageModelControl select{margin:0!important;width:190px!important;max-width:190px!important;border:0!important;background:transparent!important;color:#dce6f7!important;padding:5px 6px!important;font-size:11px!important;outline:none}
 .imageModelControl select option{background:#101c31;color:#dce6f7}
 @media(max-width:760px){.modebar{flex-wrap:wrap}.imageModelControl{order:3;width:100%;margin-left:0;justify-content:space-between}.imageModelControl select{flex:1;width:auto!important;max-width:none!important}.imageCompareToggle{margin-left:auto!important}}
+
+/* Professional Code workspace */
+.codeMessage{padding:0!important;background:transparent!important;border:0!important;max-width:92%!important}
+.codeResponse{display:grid;gap:14px}
+.codeText{white-space:pre-wrap;color:#cbd6e8;line-height:1.6;margin:2px 0}
+.codeBlock{overflow:hidden;border:1px solid #ffffff16;border-radius:14px;background:#070c15;box-shadow:0 12px 35px #0004}
+.codeBlockHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;background:#101a2a;border-bottom:1px solid #ffffff10;color:#9eacc1;font-size:10px}
+.codeBlockHead>span{display:flex;align-items:center;gap:6px;color:#cbd7e8;font-weight:700;letter-spacing:.5px}
+.codeBlockHead>div{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.codeBlockHead button{display:inline-flex;align-items:center;gap:4px;padding:5px 7px;border:1px solid #ffffff12;border-radius:7px;background:#ffffff08;color:#9eabc0;font-size:10px}
+.codeBlockHead button:hover{background:#ffffff12;color:#fff}
+.codeBlock pre{margin:0;padding:15px;overflow:auto;white-space:pre;line-height:1.55;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#e4ebf6}
+.codeBlock code{font:inherit}
+.codePreview{display:block;width:100%;height:420px;border:0;background:#fff}
+.plainResponse{white-space:pre-wrap;line-height:1.6}
+@media(max-width:760px){
+  .codeMessage{max-width:100%!important}
+  .codeBlockHead{align-items:flex-start}
+  .codeBlockHead>div{max-width:72%}
+  .codeBlock pre{font-size:11px;padding:12px}
+  .codePreview{height:360px}
+}
