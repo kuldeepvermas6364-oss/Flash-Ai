@@ -301,3 +301,41 @@ header{animation:headerIn .5s ease-out both}
   .codeMessage .codeBlock pre{padding:15px 14px;min-height:160px}
   .codeMessage .codeBlock code{font-size:11px;line-height:1.65}
 }
+
+/* Chat workspace: wider, cleaner, user-controlled motion */
+.messages{width:min(1100px,100%);max-width:1100px;gap:14px}
+.msg{width:100%;min-width:0}
+.msg.user .bubble{max-width:min(68%,760px)}
+.msg.assistant .bubble{width:min(94%,1040px);max-width:1040px}
+.msg .bubble{padding:11px 14px}
+.msg.assistant .messageContent{font-size:14px;line-height:1.58}
+.msg.user .messageContent{font-size:14px;line-height:1.5}
+.motion-smooth .msg{animation:chatSmooth .34s cubic-bezier(.22,1,.36,1) both}
+.motion-slide .msg{animation:chatSlide .28s cubic-bezier(.16,1,.3,1) both}
+.motion-glow .msg{animation:chatGlow .45s ease-out both}
+.motion-minimal .msg{animation:chatMinimal .2s ease-out both}
+.motion-none .msg{animation:none!important}
+.motion-smooth .msg:nth-child(2n){animation-delay:.02s}
+.motion-glow .msg.assistant .bubble{transition:box-shadow .35s ease}
+@keyframes chatSmooth{from{opacity:0;transform:translateY(9px) scale(.992)}to{opacity:1;transform:none}}
+@keyframes chatSlide{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes chatGlow{from{opacity:0;transform:translateY(6px);box-shadow:0 0 0 rgba(96,125,255,0)}50%{box-shadow:0 0 28px rgba(96,125,255,.12)}to{opacity:1;transform:none;box-shadow:none}}
+@keyframes chatMinimal{from{opacity:.55}to{opacity:1}}
+.motionSettings{padding-bottom:12px}
+.motionSelect{width:100%;padding:11px 12px;border:1px solid #ffffff14;border-radius:10px;background:#0b1629;color:#e3ebf8;outline:none;font-size:12px}
+.motionSelect:focus{border-color:#6f7cff66;box-shadow:0 0 0 3px #6f7cff12}
+.codeMessage .codeBlock code .tok-comment{color:#6a7890}
+.codeMessage .codeBlock code .tok-string{color:#a7e36f}
+.codeMessage .codeBlock code .tok-keyword{color:#d98cff;font-weight:650}
+.codeMessage .codeBlock code .tok-tag{color:#ff6fae}
+.codeMessage .codeBlock code .tok-number{color:#7bdcff}
+.codeMessage .codeBlock code .tok-function{color:#ffd166}
+.codeMessage .codeBlock code .tok-comment .tok-keyword,.codeMessage .codeBlock code .tok-string .tok-keyword{color:inherit;font-weight:inherit}
+@media(max-width:760px){
+  .messages{width:100%;gap:12px}
+  .msg.user .bubble{max-width:86%}
+  .msg.assistant .bubble{width:100%;max-width:100%}
+  .msg.assistant .messageContent{font-size:13px;line-height:1.55}
+  .msg.user .messageContent{font-size:13px}
+  .msg .bubble{padding:10px 12px}
+}
