@@ -129,7 +129,7 @@ export default function Home() {
         const response = await fetch("/api/pollinations/image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: text, model: imageModel }) });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data?.error || `Image request failed (${response.status})`);
-        setMessages((current) => [...current, { role: "user", content: text }, { role: "assistant", content: `Generated with ${data.model || imageModel}`, imageUrl: data?.image?.url || (data?.image?.b64_json ? `data:image/png;base64,${data.image.b64_json}` : "") }]);
+        setMessages((current) => [...current, { role: "user", content: text }, { role: "assistant", content: `Generated with ${data.model || imageModel}`, imageUrl: data?.image?.url || data?.image?.dataUrl || (data?.image?.b64_json ? `data:${data?.image?.mimeType || "image/png"};base64,${data.image.b64_json}` : "") }]);
       } catch (error) {
         setMessages((current) => [...current, { role: "user", content: text }, { role: "assistant", content: error?.message || "Image generation failed." }]);
       } finally { setLoading(false); }
