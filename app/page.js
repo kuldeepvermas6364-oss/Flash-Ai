@@ -311,7 +311,8 @@ export default function Home() {
   const active = modes.find((item) => item.id === mode) || modes[0];
 
   return (
-    {imageViewer?.url && (
+    <>
+      {imageViewer?.url && (
       <div className="imageViewerBackdrop" onClick={() => setImageViewer(null)}>
         <div className="imageViewer" onClick={(event) => event.stopPropagation()}>
           <div className="imageViewerHead">
@@ -597,5 +598,6 @@ export default function Home() {
         )}
       </section>
     </main>
+    </>
   );
 }
