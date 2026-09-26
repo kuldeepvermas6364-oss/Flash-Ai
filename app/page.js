@@ -203,12 +203,41 @@ export default function Home() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages: [...messages, { role: "user", content: text }], models: compareModels })
         });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data?.error || "Comparison failed.");
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data?.error || "Comparison failed.");
+        }
+        if (!response.body) throw new Error("Comparison stream is unavailable.");
+
         setMessages((current) => [...current, { role: "user", content: text }]);
-        setCompareResults(
-          (data.results || []).map((result) => ({ ...result, loading: false }))
-        );
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        const applyEvent = (eventText) => {
+          const line = eventText.split("\n").find((entry) => entry.startsWith("data:"));
+          if (!line) return;
+          const event = JSON.parse(line.slice(5).trim());
+          if (event.type === "result" && event.result) {
+            setCompareResults((current) =>
+              current.map((item) => item.model === event.result.model
+                ? { ...item, ...event.result, loading: false }
+                : item)
+            );
+          } else if (event.type === "error") {
+            throw new Error(event.message || "Comparison failed.");
+          }
+        };
+
+        while (true) {
+          const { value, done } = await reader.read();
+          buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+          const events = buffer.split("\n\n");
+          buffer = events.pop() || "";
+          for (const eventText of events) applyEvent(eventText);
+          if (done) break;
+        }
+        if (buffer.trim()) applyEvent(buffer);
       } catch (error) {
         setCompareResults(compareModels.map((model) => ({ model, ok: false, content: error?.message || "Comparison failed." })));
       }
