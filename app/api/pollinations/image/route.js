@@ -15,17 +15,18 @@ function getErrorMessage(data, status) {
   );
 }
 
-function normalizeImage(data, model) {
+function normalizeImage(data) {
   const item = data?.data?.[0];
   if (!item) return null;
 
+  if (item.url) return { url: item.url };
   if (item.b64_json) {
-    return { b64_json: item.b64_json, mimeType: item.mime_type || item.mimeType || "image/png" };
+    return {
+      b64_json: item.b64_json,
+      mimeType: item.mime_type || item.mimeType || "image/png"
+    };
   }
 
-  if (item.url) return { url: item.url };
-
-  // Some compatible providers may return the image under image/data fields.
   if (typeof item.image === "string") {
     if (item.image.startsWith("data:image/")) return { dataUrl: item.image };
     if (/^https?:\/\//i.test(item.image)) return { url: item.image };
@@ -46,7 +47,9 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const prompt = String(body?.prompt || "").trim();
-    const model = String(body?.model || process.env.POLLINATIONS_IMAGE_MODEL || DEFAULT_MODEL).trim();
+    const model = String(
+      body?.model || process.env.POLLINATIONS_IMAGE_MODEL || DEFAULT_MODEL
+    ).trim();
 
     if (!prompt) {
       return NextResponse.json({ error: "Image prompt is required." }, { status: 400 });
@@ -69,15 +72,16 @@ export async function POST(request) {
         method: "POST",
         headers: {
           Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          Accept: "application/json"
         },
         body: JSON.stringify({
           model,
           prompt,
           n: 1,
-          // b64_json works for the full Pollinations image catalog,
-          // including community models where URL responses are not supported.
-          response_format: "b64_json"
+          // Official models support stored media URLs. Community models must
+          // use b64_json because their OpenAI-compatible output is base64-only.
+          response_format: model.toLowerCase().startsWith("community/") ? "b64_json" : "url"
         }),
         signal: controller.signal,
         cache: "no-store"
@@ -95,7 +99,7 @@ export async function POST(request) {
       );
     }
 
-    const image = normalizeImage(data, model);
+    const image = normalizeImage(data);
 
     if (!image) {
       return NextResponse.json(
