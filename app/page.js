@@ -18,7 +18,15 @@ const MODEL_CATEGORIES = [
 
 function getModelCategory(model) {
   const id = String(model?.id || model || "");
-  const found = MODEL_CATEGORIES.find((category) => category.match.test(id));
+  const metadata = [
+    model?.category,
+    model?.type,
+    model?.family,
+    model?.capability,
+    ...(Array.isArray(model?.capabilities) ? model.capabilities : [])
+  ].filter(Boolean).join(" ");
+  const source = `${metadata} ${id} ${String(model?.name || "")}`;
+  const found = MODEL_CATEGORIES.find((category) => category.match.test(source));
   return found?.id || "general";
 }
 
